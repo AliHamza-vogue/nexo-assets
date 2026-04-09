@@ -565,6 +565,43 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+    <script>
+function handleLogin() {
+    // 1. Get values from your React-styled inputs
+    const email = document.getElementById('usr').value;
+    const password = document.getElementById('pwd').value;
+    const btn = document.querySelector('.login-btn');
+
+    // 2. Show the "Verifying" state you designed
+    if(btn) {
+        btn.innerText = "AUTHENTICATING...";
+        btn.disabled = true;
+    }
+
+    // 3. Trigger the Frappe System Login
+    frappe.call({
+        method: "login",
+        args: {
+            usr: email,
+            pwd: password
+        },
+        callback: function(r) {
+            if (r.message === "Logged In") {
+                // Success! Redirect to the main ERP dashboard
+                window.location.href = "/app";
+            }
+        },
+        error: function() {
+            // Fail! Reset the button so you can try again
+            if(btn) {
+                btn.innerText = "LOGIN TO ERP →";
+                btn.disabled = false;
+            }
+            alert("Access Denied: Invalid Credentials.");
+        }
+    });
+}
+</script>
     </script>
 </body>
 </html>
