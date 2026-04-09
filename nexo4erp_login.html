@@ -12,14 +12,11 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0a0b0e; color: white; overflow-x: hidden; }
-        .font-mono { font-family: 'JetBrains+Mono', monospace; }
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus {
-            -webkit-text-fill-color: white;
-            -webkit-box-shadow: 0 0 0px 1000px #16191e inset;
-            transition: background-color 5000s ease-in-out 0s;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0a0b0e; color: white; overflow-x: hidden; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        input:-webkit-autofill {
+            -webkit-text-fill-color: white !important;
+            -webkit-box-shadow: 0 0 0px 1000px #16191e inset !important;
         }
     </style>
     <script>
@@ -36,11 +33,18 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // Robust dependency check
         const { useState, useEffect } = React;
-        const { motion, AnimatePresence } = FramerMotion;
+        
+        // Handle different CDN export names for Framer Motion
+        const MotionObj = window.Motion || window.framerMotion;
+        const motion = MotionObj ? MotionObj.motion : null;
+        const AnimatePresence = MotionObj ? MotionObj.AnimatePresence : null;
 
         const Icon = ({ name, className }) => {
-            useEffect(() => { lucide.createIcons(); }, [name]);
+            useEffect(() => { 
+                if (window.lucide) lucide.createIcons(); 
+            }, [name]);
             return <i data-lucide={name} className={className}></i>;
         };
 
@@ -61,7 +65,7 @@
             const [password, setPassword] = useState('');
             const [showPassword, setShowPassword] = useState(false);
             const [isLoading, setIsLoading] = useState(false);
-            const [status, setStatus] = useState('idle'); // idle, loading, success, error
+            const [status, setStatus] = useState('idle'); 
             const [errorMessage, setErrorMessage] = useState('');
 
             const handleSubmit = (e) => {
@@ -70,7 +74,6 @@
                 setErrorMessage("");
                 setStatus('loading');
 
-                // Frappe Auth Call
                 if (typeof frappe !== 'undefined') {
                     frappe.call({
                         method: "login",
@@ -88,7 +91,6 @@
                         }
                     });
                 } else {
-                    // Fallback for testing outside of Frappe environment
                     setTimeout(() => {
                         setIsLoading(false);
                         setStatus('error');
@@ -97,61 +99,54 @@
                 }
             };
 
+            // Error boundary for Framer Motion
+            if (!motion) return <div className="p-20 text-accent font-mono">CRITICAL_ERROR: MOTION_ENGINE_OFFLINE</div>;
+
             return (
                 <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#0a0b0e]">
-                    {/* Left Side: Branding & Visuals */}
-                    <div className="hidden md:flex w-full md:w-1/2 lg:w-[60%] p-12 lg:p-20 flex-col justify-between relative overflow-hidden bg-[#0a0b0e]">
+                    {/* Left Side: Branding */}
+                    <div className="hidden md:flex w-full md:w-1/2 lg:w-[60%] p-12 lg:p-20 flex-col justify-between relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-full opacity-20">
                             <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/30 rounded-full blur-[120px]"></div>
-                            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-900/20 rounded-full blur-[100px]"></div>
                         </div>
 
-                        <div className="z-10">
-                            <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center gap-3 mb-16">
-                                <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(64,130,141,0.5)]">
-                                    <Icon name="layers" className="text-white w-6 h-6" />
-                                </div>
-                                <span className="text-2xl font-black tracking-tighter italic">NEXO 4 ERP</span>
-                            </motion.div>
-
-                            <div className="max-w-xl">
-                                <motion.h1 initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl lg:text-7xl font-extrabold leading-[1.1] mb-8">
-                                    Autonomous <br/><span className="text-accent">Enterprise</span> Control.
-                                </motion.h1>
-                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <FeatureCard iconName="globe" title="Global Logistics" desc="End-to-end supply chain visibility." />
-                                    <FeatureCard iconName="shield-check" title="Secure Infrastructure" desc="Enterprise-grade security standards." />
-                                </motion.div>
+                        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="z-10 flex items-center gap-3">
+                            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                                <Icon name="layers" className="text-white w-6 h-6" />
                             </div>
-                        </div>
+                            <span className="text-2xl font-black tracking-tighter italic">NEXO 4 ERP</span>
+                        </motion.div>
 
-                        <div className="z-10">
-                            <p className="text-sm font-mono opacity-40">© 2026 NEXO CLOUD. ALL RIGHTS RESERVED.</p>
+                        <div className="z-10 max-w-xl">
+                            <motion.h1 initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl lg:text-7xl font-extrabold leading-[1.1] mb-8">
+                                Autonomous <br/><span className="text-accent">Enterprise</span> Control.
+                            </motion.h1>
+                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <FeatureCard iconName="globe" title="Global Logistics" desc="End-to-end supply chain visibility." />
+                                <FeatureCard iconName="shield-check" title="Secure Infrastructure" desc="Enterprise-grade security." />
+                            </motion.div>
                         </div>
+                        <p className="z-10 text-sm font-mono opacity-40">© 2026 NEXO CLOUD. ALL RIGHTS RESERVED.</p>
                     </div>
 
-                    {/* Right Side: Login Form */}
-                    <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 md:p-16 bg-[#0f1115] relative">
-                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#40828d 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-                        
+                    {/* Right Side: Form */}
+                    <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 bg-[#0f1115] relative">
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm z-10">
-                            <div className="mb-10">
-                                <h3 className="text-3xl font-bold mb-2">Welcome back</h3>
-                                <p className="text-gray-400 text-sm">Please authenticate to access the ERP portal.</p>
-                            </div>
+                            <h3 className="text-3xl font-bold mb-2">Welcome back</h3>
+                            <p className="text-gray-400 text-sm mb-10">Please authenticate to access the ERP portal.</p>
 
                             <form className="space-y-6" onSubmit={handleSubmit}>
-                                <div className="space-y-5">
+                                <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Username / Email</label>
-                                        <div className="relative group">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <Icon name="mail" className="h-4 w-4 text-gray-500" />
+                                        <label className="text-xs font-semibold text-gray-500 uppercase">Username / Email</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                                                <Icon name="mail" className="h-4 w-4" />
                                             </div>
                                             <input
                                                 type="text"
-                                                className="block w-full pl-11 pr-4 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm text-white focus:outline-none focus:border-accent/50 transition-all"
-                                                placeholder="abc@nexo4erp.com"
+                                                className="block w-full pl-11 pr-4 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm focus:outline-none focus:border-accent/50 transition-all"
+                                                placeholder="user@nexo4erp.com"
                                                 required
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
@@ -160,17 +155,16 @@
                                     </div>
 
                                     <div className="space-y-2">
-                                        <div className="flex justify-between items-center px-1">
-                                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Password</label>
-                                            <a href="#" className="text-[10px] text-accent font-bold hover:underline">Forgot?</a>
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-xs font-semibold text-gray-500 uppercase">Password</label>
                                         </div>
-                                        <div className="relative group">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <Icon name="lock" className="h-4 w-4 text-gray-500" />
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                                                <Icon name="lock" className="h-4 w-4" />
                                             </div>
                                             <input
                                                 type={showPassword ? "text" : "password"}
-                                                className="block w-full pl-11 pr-12 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm text-white focus:outline-none focus:border-accent/50 transition-all"
+                                                className="block w-full pl-11 pr-12 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm focus:outline-none focus:border-accent/50 transition-all"
                                                 placeholder="••••••••••••"
                                                 required
                                                 value={password}
@@ -189,14 +183,12 @@
 
                                 <AnimatePresence>
                                     {(errorMessage || status === 'success') && (
-                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                                             className={`p-4 rounded-xl border flex gap-3 ${status === 'success' ? 'bg-accent/10 border-accent/20' : 'bg-red-500/10 border-red-500/20'}`}>
                                             <Icon name={status === 'success' ? "shield-check" : "alert-circle"} className={`w-5 h-5 ${status === 'success' ? 'text-accent' : 'text-red-500'}`} />
-                                            <div className="space-y-1">
-                                                <p className={`text-xs font-bold uppercase ${status === 'success' ? 'text-accent' : 'text-red-500'}`}>
-                                                    {status === 'success' ? 'Access Granted' : 'Access Denied'}
-                                                </p>
-                                                <p className="text-xs opacity-80">{status === 'success' ? 'Redirecting...' : errorMessage}</p>
+                                            <div>
+                                                <p className={`text-xs font-bold uppercase ${status === 'success' ? 'text-accent' : 'text-red-500'}`}>{status === 'success' ? 'Success' : 'Error'}</p>
+                                                <p className="text-xs opacity-70">{status === 'success' ? 'Redirecting to dashboard...' : errorMessage}</p>
                                             </div>
                                         </motion.div>
                                     )}
@@ -205,35 +197,30 @@
                                 <button
                                     type="submit"
                                     disabled={isLoading || status === 'success'}
-                                    className="w-full relative py-4 bg-accent rounded-xl font-bold uppercase tracking-widest text-dark overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(64,130,141,0.4)] disabled:opacity-50"
+                                    className="w-full py-4 bg-accent rounded-xl font-bold uppercase tracking-widest text-dark transition-all hover:shadow-[0_0_20px_rgba(64,130,141,0.4)] disabled:opacity-50"
                                 >
                                     <div className="flex items-center justify-center gap-2">
-                                        {isLoading ? <Icon name="loader-2" className="w-5 h-5 animate-spin" /> : status === 'success' ? "Proceeding..." : "Login to ERP"}
-                                        {!isLoading && status !== 'success' && <Icon name="arrow-right" className="w-5 h-5" />}
+                                        {isLoading ? <Icon name="loader-2" className="w-5 h-5 animate-spin" /> : status === 'success' ? "Access Granted" : "Authenticate"}
                                     </div>
                                 </button>
                             </form>
 
-                            {/* System Status Display */}
                             <div className="mt-12 pt-8 border-t border-[#2d323b] flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="relative w-12 h-6 overflow-hidden bg-[#16191e]/50 rounded-md border border-[#2d323b]">
-                                        <svg viewBox="0 0 100 40" className="absolute inset-0 w-full h-full">
+                                    <div className="relative w-12 h-6 bg-[#16191e] rounded border border-[#2d323b]">
+                                        <svg viewBox="0 0 100 40" className="w-full h-full">
                                             <motion.path
-                                                d="M 0 20 L 35 20 L 40 18 L 45 5 L 52 35 L 57 20 L 100 20"
+                                                d="M 0 20 L 35 20 L 40 10 L 45 30 L 52 10 L 57 20 L 100 20"
                                                 fill="none"
-                                                stroke={status === 'error' ? '#ef4444' : status === 'success' ? '#40828d' : '#22c55e'}
+                                                stroke={status === 'error' ? '#ef4444' : '#40828d'}
                                                 strokeWidth="2"
                                                 animate={{ pathOffset: [1, 0, -1] }}
-                                                transition={{ duration: status === 'loading' ? 0.5 : 3, repeat: Infinity, ease: "linear" }}
+                                                transition={{ duration: status === 'loading' ? 0.6 : 2, repeat: Infinity, ease: "linear" }}
                                             />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-mono text-gray-500 uppercase">
-                                        {status === 'loading' ? 'Verifying Node...' : status === 'error' ? 'Handshake Failed' : 'System Operational'}
-                                    </span>
+                                    <span className="text-[10px] font-mono text-gray-500">SYSTEM_{status.toUpperCase()}</span>
                                 </div>
-                                <span className="text-[10px] font-bold opacity-40">NEXO 4 ERP</span>
                             </div>
                         </motion.div>
                     </div>
@@ -241,10 +228,12 @@
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        // Delay mounting slightly to allow CDNs to initialize
+        setTimeout(() => {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        }, 100);
     </script>
-
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </body>
 </html>
