@@ -3,151 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXO 4 | Secure Access</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
-    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <title>NEXO 4 ERP - Login Portal</title>
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0a0b0e; color: white; overflow-x: hidden; margin: 0; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        input:-webkit-autofill {
-            -webkit-text-fill-color: white !important;
-            -webkit-box-shadow: 0 0 0px 1000px #16191e inset !important;
-        }
-    </style>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { accent: '#40828d', dark: '#0a0b0e', surface: '#16191e', border: '#2d323b' }
+                    colors: {
+                        accent: '#40828d', // Standard blue accent, adjust to match your brand
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
                 }
             }
         }
     </script>
+
+    <style>
+        body {
+            background-color: #0a0b0e;
+            margin: 0;
+            padding: 0;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0b0e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d323b;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #40828d;
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
-        // Robust dependency check
-        const { useState, useEffect } = React;
-        
-        // Handle different CDN export names for Framer Motion
-        const MotionObj = window.Motion || window.framerMotion;
-        const motion = MotionObj ? MotionObj.motion : null;
-        const AnimatePresence = MotionObj ? MotionObj.AnimatePresence : null;
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        // Lucide Icon Component Helper
         const Icon = ({ name, className }) => {
-            useEffect(() => { 
-                if (window.lucide) lucide.createIcons(); 
-            }, [name]);
+            const [svg, setSvg] = useState('');
+            
+            useEffect(() => {
+                // Initialize lucide icons after render
+                lucide.createIcons();
+            }, []);
+
             return <i data-lucide={name} className={className}></i>;
         };
 
-        const FeatureCard = ({ iconName, title, desc }) => (
-            <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10">
-                <div className="p-2.5 rounded-xl bg-accent/20 text-accent">
-                    <Icon name={iconName} className="w-5 h-5" />
-                </div>
-                <div>
-                    <h4 className="text-sm font-bold text-white mb-1">{title}</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
-                </div>
-            </div>
+        const EmpireBars = ({ className }) => (
+            <svg viewBox="0 0 24 24" className={className}>
+                <defs>
+                    <linearGradient id="empire-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <motion.stop 
+                            offset="0%" 
+                            animate={{ stopColor: ["#40828d", "#5ba4b0", "#2d5d65", "#40828d"] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        />
+                        <motion.stop 
+                            offset="100%" 
+                            animate={{ stopColor: ["#2d5d65", "#40828d", "#5ba4b0", "#2d5d65"] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        />
+                    </linearGradient>
+                </defs>
+                <g fill="url(#empire-gradient)">
+                    <path d="M2 11L5 9V20H2V11Z" />
+                    <path d="M7 3L10 1V23H7V3Z" />
+                    <path d="M12 12L15 10V18H12V12Z" />
+                    <path d="M17 6L20 4V21H17V6Z" />
+                </g>
+            </svg>
         );
+
+        function FeatureCard({ iconName, title, desc }) {
+            return (
+                <motion.div 
+                    whileHover={{ x: 10 }}
+                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md cursor-default group transition-colors hover:bg-white/10"
+                >
+                    <motion.div 
+                        animate={{ 
+                            backgroundColor: ["rgba(64, 130, 141, 0.1)", "rgba(91, 164, 176, 0.2)", "rgba(64, 130, 141, 0.1)"],
+                            color: ["#40828d", "#ffffff", "#40828d"]
+                        }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="p-2.5 rounded-xl group-hover:bg-accent group-hover:text-[#0a0b0e] transition-colors"
+                    >
+                        <Icon name={iconName} className="w-5 h-5" />
+                    </motion.div>
+                    <div>
+                        <h4 className="text-sm font-bold">{title}</h4>
+                        <p className="text-xs text-gray-400">{desc}</p>
+                    </div>
+                    <Icon name="chevron-right" className="w-4 h-4 text-gray-600 ml-auto group-hover:text-accent transition-colors" />
+                </motion.div>
+            );
+        }
 
         function App() {
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
             const [showPassword, setShowPassword] = useState(false);
             const [isLoading, setIsLoading] = useState(false);
-            const [status, setStatus] = useState('idle'); 
-            const [errorMessage, setErrorMessage] = useState('');
+            const [status, setStatus] = useState('idle'); // idle, loading, success, error
+            const [errorMessage, setErrorMessage] = useState(null);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [status, showPassword, errorMessage]);
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                setIsLoading(true);
-                setErrorMessage("");
-                setStatus('loading');
+                if (!email || !password) return;
 
-                if (typeof frappe !== 'undefined') {
+                setIsLoading(true);
+                setStatus('loading');
+                setErrorMessage(null);
+
+                // Frappe Login Integration
+                if (window.frappe) {
                     frappe.call({
                         method: "login",
-                        args: { usr: email, pwd: password },
-                        callback: function(r) {
+                        args: {
+                            usr: email.trim(),
+                            pwd: password
+                        },
+                        callback: (r) => {
+                            setIsLoading(false);
                             if (r.message === "Logged In") {
                                 setStatus('success');
-                                setTimeout(() => { window.location.href = "/app"; }, 1000);
+                                setTimeout(() => {
+                                    window.location.href = "/app";
+                                }, 1000);
+                            } else {
+                                setStatus('error');
+                                setErrorMessage(r.message || "Authentication failed. Please check your credentials.");
+                                setTimeout(() => {
+                                    setStatus('idle');
+                                    setErrorMessage(null);
+                                }, 5000);
                             }
-                        },
-                        error: function(r) {
-                            setIsLoading(false);
-                            setStatus('error');
-                            setErrorMessage("Authentication Failed: Invalid credentials.");
                         }
                     });
                 } else {
+                    // Mock Login for testing
                     setTimeout(() => {
                         setIsLoading(false);
-                        setStatus('error');
-                        setErrorMessage("System Error: Frappe core not detected.");
+                        if (email === "admin" && password === "admin") {
+                            setStatus('success');
+                        } else {
+                            setStatus('error');
+                            setErrorMessage("Invalid credentials. Use admin/admin for demo.");
+                            setTimeout(() => {
+                                setStatus('idle');
+                                setErrorMessage(null);
+                            }, 5000);
+                        }
                     }, 1500);
                 }
             };
 
-            // Error boundary for Framer Motion
-            if (!motion) return <div className="p-20 text-accent font-mono">CRITICAL_ERROR: MOTION_ENGINE_OFFLINE</div>;
-
             return (
-                <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#0a0b0e]">
-                    {/* Left Side: Branding */}
-                    <div className="hidden md:flex w-full md:w-1/2 lg:w-[60%] p-12 lg:p-20 flex-col justify-between relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-full opacity-20">
-                            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent/30 rounded-full blur-[120px]"></div>
-                        </div>
+                <div className="min-h-screen flex flex-col md:flex-row bg-[#0a0b0e] text-white font-sans overflow-hidden">
+                    
+                    {/* Left Side: Branding & Features */}
+                    <div 
+                        className="relative w-full md:w-1/2 lg:w-[60%] h-[40vh] md:h-screen overflow-hidden bg-cover bg-center"
+                        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070")' }}
+                    >
+                        {/* Background Video */}
+                        <video
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            poster="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{ filter: 'brightness(0.5)' }}
+                        >
+                            <source 
+                                src="https://player.vimeo.com/external/459389137.sd.mp4?s=912061690186591012354c0032953282&profile_id=164&oauth2_token_id=57447761" 
+                                type="video/mp4" 
+                            />
+                        </video>
 
-                        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="z-10 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
-                                <Icon name="layers" className="text-white w-6 h-6" />
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0b0e] via-[#0a0b0e]/80 to-transparent md:bg-gradient-to-b md:from-black/60 md:to-[#0a0b0e]"></div>
+                        
+                        {/* Content */}
+                        <div className="relative h-full flex flex-col justify-between p-8 md:p-16 z-10">
+                            <motion.div 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.8 }}
+                                className="flex items-center gap-4"
+                            >
+                                <div className="p-3 bg-accent/20 rounded-xl border border-accent/30 backdrop-blur-md">
+                                    <EmpireBars className="w-8 h-8 text-accent" />
+                                </div>
+                                <div>
+                                    <motion.h2 
+                                        animate={{ color: ["#ffffff", "#40828d", "#ffffff"] }}
+                                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                                        className="text-3xl font-bold tracking-tighter"
+                                    >
+                                        NEXO 4 ERP
+                                    </motion.h2>
+                                    <motion.p 
+                                        animate={{ opacity: [0.6, 1, 0.6], color: ["#5ba4b0", "#ffffff", "#5ba4b0"] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                        className="text-[10px] font-mono uppercase tracking-[0.3em]"
+                                    >
+                                        Enterprise Intelligence
+                                    </motion.p>
+                                </div>
+                            </motion.div>
+
+                            <div className="max-w-xl">
+                                <motion.h1 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.2 }}
+                                    className="text-4xl md:text-6xl font-bold leading-[1.1] mb-4"
+                                >
+                                    THE CORE OF YOUR <motion.span 
+                                        animate={{ color: ["#40828d", "#5ba4b0", "#2d5d65", "#40828d"] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                        className="text-accent"
+                                    >
+                                        EMPIRE
+                                    </motion.span>
+                                </motion.h1>
+                                
+                                <motion.p
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.3 }}
+                                    className="text-lg md:text-xl text-gray-400 mb-8 font-light tracking-wide"
+                                >
+                                    <motion.span
+                                        animate={{ color: ["#9ca3af", "#ffffff", "#9ca3af"] }}
+                                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                    >
+                                        Beyond Transactions.
+                                    </motion.span> <motion.span 
+                                        animate={{ color: ["#ffffff", "#40828d", "#ffffff"] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                        className="font-medium"
+                                    >
+                                        Pure Intelligence
+                                    </motion.span>
+                                </motion.p>
+                                
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 1, delay: 0.4 }}
+                                    className="space-y-4"
+                                >
+                                    <FeatureCard 
+                                        iconName="bar-chart-3" 
+                                        title="Real-time Analytics" 
+                                        desc="Live downstream production data and insights."
+                                    />
+                                    <FeatureCard 
+                                        iconName="globe" 
+                                        title="Global Logistics" 
+                                        desc="End-to-end supply chain visibility."
+                                    />
+                                    <FeatureCard 
+                                        iconName="shield-check" 
+                                        title="Secure Infrastructure" 
+                                        desc="Enterprise-grade security standards."
+                                    />
+                                </motion.div>
                             </div>
-                            <span className="text-2xl font-black tracking-tighter italic">NEXO 4 ERP</span>
-                        </motion.div>
 
-                        <div className="z-10 max-w-xl">
-                            <motion.h1 initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-5xl lg:text-7xl font-extrabold leading-[1.1] mb-8">
-                                Autonomous <br/><span className="text-accent">Enterprise</span> Control.
-                            </motion.h1>
-                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <FeatureCard iconName="globe" title="Global Logistics" desc="End-to-end supply chain visibility." />
-                                <FeatureCard iconName="shield-check" title="Secure Infrastructure" desc="Enterprise-grade security." />
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.8, delay: 0.6 }}
+                                className="hidden md:block"
+                            >
+                                <motion.p 
+                                    animate={{ color: ["#6b7280", "#40828d", "#6b7280"] }}
+                                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                    className="text-sm font-mono"
+                                >
+                                    © 2026 NEXO CLOUD. ALL RIGHTS RESERVED.
+                                </motion.p>
                             </motion.div>
                         </div>
-                        <p className="z-10 text-sm font-mono opacity-40">© 2026 NEXO CLOUD. ALL RIGHTS RESERVED.</p>
                     </div>
 
-                    {/* Right Side: Form */}
-                    <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 bg-[#0f1115] relative">
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm z-10">
-                            <h3 className="text-3xl font-bold mb-2">Welcome back</h3>
-                            <p className="text-gray-400 text-sm mb-10">Please authenticate to access the ERP portal.</p>
+                    {/* Right Side: Login Form */}
+                    <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 md:p-16 bg-[#0f1115] relative">
+                        {/* Subtle Background Pattern */}
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#40828d 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+                        
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="w-full max-w-sm z-10"
+                        >
+                            <div className="mb-10">
+                                <h3 className="text-3xl font-bold mb-2">Welcome back</h3>
+                                <p className="text-gray-400 text-sm">Please authenticate to access the ERP portal.</p>
+                            </div>
 
                             <form className="space-y-6" onSubmit={handleSubmit}>
-                                <div className="space-y-4">
+                                <div className="space-y-5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase">Username / Email</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                                                <Icon name="mail" className="h-4 w-4" />
+                                        <label htmlFor="login_email" className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Username / Email</label>
+                                        <div className="relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Icon name="mail" className="h-4 w-4 text-gray-500 group-focus-within:text-accent transition-colors" />
                                             </div>
                                             <input
                                                 type="text"
-                                                className="block w-full pl-11 pr-4 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm focus:outline-none focus:border-accent/50 transition-all"
-                                                placeholder="user@nexo4erp.com"
+                                                id="login_email"
+                                                className="block w-full pl-11 pr-4 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent/50 transition-all"
+                                                placeholder="abc@nexo4erp.com"
                                                 required
+                                                autoFocus
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                             />
@@ -155,16 +365,18 @@
                                     </div>
 
                                     <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-xs font-semibold text-gray-500 uppercase">Password</label>
+                                        <div className="flex justify-between items-center px-1">
+                                            <label htmlFor="login_password" className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Password</label>
+                                            <a href="#" className="text-[10px] text-accent hover:text-accent/80 font-bold uppercase tracking-tighter transition-colors">Forgot password?</a>
                                         </div>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                                                <Icon name="lock" className="h-4 w-4" />
+                                        <div className="relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Icon name="lock" className="h-4 w-4 text-gray-500 group-focus-within:text-accent transition-colors" />
                                             </div>
                                             <input
                                                 type={showPassword ? "text" : "password"}
-                                                className="block w-full pl-11 pr-12 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm focus:outline-none focus:border-accent/50 transition-all"
+                                                id="login_password"
+                                                className="block w-full pl-11 pr-12 py-3.5 bg-[#16191e] border border-[#2d323b] rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent/50 transition-all"
                                                 placeholder="••••••••••••"
                                                 required
                                                 value={password}
@@ -173,7 +385,7 @@
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-accent"
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-accent transition-colors"
                                             >
                                                 <Icon name={showPassword ? "eye-off" : "eye"} className="h-4 w-4" />
                                             </button>
@@ -181,14 +393,40 @@
                                     </div>
                                 </div>
 
+                                <div className="flex items-center gap-3 px-1">
+                                    <input 
+                                        type="checkbox" 
+                                        id="remember"
+                                        className="w-4 h-4 rounded border-[#3b424e] bg-[#16191e] accent-accent focus:ring-0 focus:ring-offset-0 cursor-pointer" 
+                                    />
+                                    <label htmlFor="remember" className="text-sm text-gray-400 cursor-pointer select-none hover:text-gray-300 transition-colors">Remember this session</label>
+                                </div>
+
                                 <AnimatePresence>
-                                    {(errorMessage || status === 'success') && (
-                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                                            className={`p-4 rounded-xl border flex gap-3 ${status === 'success' ? 'bg-accent/10 border-accent/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                                            <Icon name={status === 'success' ? "shield-check" : "alert-circle"} className={`w-5 h-5 ${status === 'success' ? 'text-accent' : 'text-red-500'}`} />
-                                            <div>
-                                                <p className={`text-xs font-bold uppercase ${status === 'success' ? 'text-accent' : 'text-red-500'}`}>{status === 'success' ? 'Success' : 'Error'}</p>
-                                                <p className="text-xs opacity-70">{status === 'success' ? 'Redirecting to dashboard...' : errorMessage}</p>
+                                    {errorMessage && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3"
+                                        >
+                                            <Icon name="alert-circle" className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold text-red-500 uppercase tracking-wider">Access Denied</p>
+                                                <p className="text-xs text-red-400/80 leading-relaxed">{errorMessage}</p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                    {status === 'success' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex items-start gap-3"
+                                        >
+                                            <Icon name="shield-check" className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold text-accent uppercase tracking-wider">Access Granted</p>
+                                                <p className="text-xs text-accent/80 leading-relaxed">Authentication successful. Redirecting to secure terminal...</p>
                                             </div>
                                         </motion.div>
                                     )}
@@ -197,29 +435,126 @@
                                 <button
                                     type="submit"
                                     disabled={isLoading || status === 'success'}
-                                    className="w-full py-4 bg-accent rounded-xl font-bold uppercase tracking-widest text-dark transition-all hover:shadow-[0_0_20px_rgba(64,130,141,0.4)] disabled:opacity-50"
+                                    className="w-full relative group rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(64,130,141,0.4)]"
                                 >
-                                    <div className="flex items-center justify-center gap-2">
-                                        {isLoading ? <Icon name="loader-2" className="w-5 h-5 animate-spin" /> : status === 'success' ? "Access Granted" : "Authenticate"}
+                                    <div className={`absolute inset-0 bg-accent rounded-xl transition-transform duration-300 group-hover:scale-[1.02] ${isLoading ? 'opacity-50' : ''}`}></div>
+                                    
+                                    {/* Pulse Effect */}
+                                    <motion.div
+                                        animate={{
+                                            opacity: [0, 0.4, 0],
+                                            scale: [1, 1.1, 1.2],
+                                        }}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: Infinity,
+                                            ease: "easeOut",
+                                        }}
+                                        className="absolute inset-0 bg-accent rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    />
+
+                                    <div className="relative flex items-center justify-center gap-2 py-4 px-6 text-sm font-bold text-[#0a0b0e] uppercase tracking-widest">
+                                        {isLoading ? (
+                                            <>
+                                                <motion.div 
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                >
+                                                    <Icon name="cpu" className="w-5 h-5" />
+                                                </motion.div>
+                                                <span>Authenticating...</span>
+                                            </>
+                                        ) : status === 'success' ? (
+                                            <>
+                                                <Icon name="shield-check" className="w-5 h-5" />
+                                                <span>Access Granted</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>Login to ERP</span>
+                                                <Icon name="arrow-right" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            </>
+                                        )}
                                     </div>
                                 </button>
                             </form>
 
                             <div className="mt-12 pt-8 border-t border-[#2d323b] flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="relative w-12 h-6 bg-[#16191e] rounded border border-[#2d323b]">
-                                        <svg viewBox="0 0 100 40" className="w-full h-full">
+                                    <div className="relative w-12 h-6 overflow-hidden bg-[#16191e]/50 rounded-md border border-[#2d323b]">
+                                        <svg
+                                            viewBox="0 0 100 40"
+                                            className="absolute inset-0 w-full h-full"
+                                            preserveAspectRatio="none"
+                                        >
+                                            <line x1="0" y1="20" x2="100" y2="20" stroke="#2d323b" strokeWidth="0.5" />
+                                            <line x1="50" y1="0" x2="50" y2="40" stroke="#2d323b" strokeWidth="0.5" />
+
                                             <motion.path
-                                                d="M 0 20 L 35 20 L 40 10 L 45 30 L 52 10 L 57 20 L 100 20"
+                                                d="M 0 20 L 35 20 L 40 18 L 45 5 L 52 35 L 57 20 L 100 20"
                                                 fill="none"
-                                                stroke={status === 'error' ? '#ef4444' : '#40828d'}
+                                                stroke={status === 'error' ? '#ef4444' : status === 'success' ? '#40828d' : '#22c55e'}
                                                 strokeWidth="2"
-                                                animate={{ pathOffset: [1, 0, -1] }}
-                                                transition={{ duration: status === 'loading' ? 0.6 : 2, repeat: Infinity, ease: "linear" }}
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                initial={{ pathLength: 0, pathOffset: 1 }}
+                                                animate={{ 
+                                                    pathLength: [0, 1, 1],
+                                                    pathOffset: [1, 0, -1]
+                                                }}
+                                                transition={{ 
+                                                    duration: status === 'loading' ? 1 : 3, 
+                                                    repeat: Infinity, 
+                                                    ease: "linear" 
+                                                }}
                                             />
+                                            
+                                            <motion.rect
+                                                width="20"
+                                                height="40"
+                                                fill="url(#ecg-gradient)"
+                                                initial={{ x: -20 }}
+                                                animate={{ x: 100 }}
+                                                transition={{ 
+                                                    duration: status === 'loading' ? 1 : 3, 
+                                                    repeat: Infinity, 
+                                                    ease: "linear" 
+                                                }}
+                                            />
+                                            
+                                            <defs>
+                                                <linearGradient id="ecg-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="transparent" />
+                                                    <stop offset="100%" stopColor={status === 'error' ? '#ef444444' : status === 'success' ? '#40828d44' : '#22c55e44'} />
+                                                </linearGradient>
+                                            </defs>
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-mono text-gray-500">SYSTEM_{status.toUpperCase()}</span>
+                                    <AnimatePresence mode="wait">
+                                        <motion.span 
+                                            key={status}
+                                            initial={{ opacity: 0, x: -5 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 5 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="text-[10px] font-mono text-gray-500 uppercase tracking-widest"
+                                        >
+                                            {status === 'loading' ? 'Verifying Node...' : 
+                                             status === 'error' ? 'Handshake Failed' :
+                                             status === 'success' ? 'Session Established' :
+                                             'System Operational'}
+                                        </motion.span>
+                                    </AnimatePresence>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-[10px] text-gray-600 uppercase">Powered by</span>
+                                    <motion.span 
+                                        animate={{ color: ["#9ca3af", "#ffffff", "#9ca3af"] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                        className="text-[10px] font-bold"
+                                    >
+                                        NEXO 4 ERP
+                                    </motion.span>
                                 </div>
                             </div>
                         </motion.div>
@@ -228,12 +563,8 @@
             );
         }
 
-        // Delay mounting slightly to allow CDNs to initialize
-        setTimeout(() => {
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<App />);
-        }, 100);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </body>
 </html>
